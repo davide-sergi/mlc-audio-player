@@ -1,329 +1,553 @@
-# MLC Audio Player - Exercise Guide
+# MLC Audio Player
 
-Learn to build an audio player from scratch through interactive exercises. Each exercise builds on the previous one, progressively adding features to your Python audio player application.
+This repository contains a set of exercises that guide you in developing a smart drum sequencer powered by ST AIoT Craft and Machine Learning Core.
 
-## Prerequisites
+## Pre-requisites
 
-- Python 3.8+
-- `pip` package manager
-- A code editor (VS Code, PyCharm, etc.)
+### Python 3.8+
 
-### Setup Instructions
+**macOS:**
 
-Create a new Python file in your local workspace:
+- Install via Homebrew: `brew install python@3.8` (or higher version like 3.9, 3.10, 3.11, 3.12)
+- Or download from [python.org](https://www.python.org/downloads/)
+- Verify installation: `python3 --version`
 
-```bash
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
+**Windows:**
 
-Install required dependencies:
+- Download the installer from [python.org](https://www.python.org/downloads/)
+- Run the installer and **check "Add Python to PATH"** during installation
+- Verify installation: Open Command Prompt and run `python --version`
 
-```bash
-pip install pygame  # For audio playback
-pip install pyaudio  # For audio I/O
-pip install numpy   # For audio processing (optional)
-```
+**Linux (Ubuntu/Debian):**
+
+- Install via package manager: `sudo apt update && sudo apt install python3.8` (or higher version)
+- Verify installation: `python3 --version`
+
+### pip (Python package manager)
+
+**macOS & Linux:**
+
+- Usually comes bundled with Python
+- Verify installation: `pip3 --version`
+- If not installed, run: `python3 -m ensurepip --upgrade`
+
+**Windows:**
+
+- Usually comes bundled with Python (if you checked "Add Python to PATH")
+- Verify installation: Open Command Prompt and run `pip --version`
+- If not installed, run: `python -m ensurepip --upgrade`
+
+### Text editor or IDE
+
+**All platforms (VS Code - recommended):**
+
+- Download from [code.visualstudio.com](https://code.visualstudio.com/)
+- Install Python extension from the Extensions marketplace
+- Verify installation: Open the application
+
+**Alternatives:** PyCharm, Sublime Text, or any text editor
+
+### Operating System Specific Requirements
+
+**macOS:**
+
+- This application uses the native `afplay` command for audio playback
+- Verify `afplay` is available: `which afplay` (should output `/usr/bin/afplay`)
+
+**Windows:**
+
+- This application uses native Windows media player (via `winsound` or similar)
+- No additional installation needed; built-in to Windows
+
+**Linux:**
+
+- This application uses `aplay` (ALSA player) for audio playback
+- Install if not present: `sudo apt install alsa-utils` (Ubuntu/Debian)
+- Verify installation: `which aplay`
+
+### Serial device connection
+
+**Hardware required:**
+
+- A green board or ST AIoT Craft-compatible device
+- USB cable connecting your device to your computer
+
+**Verification:**
+
+**macOS:**
+
+- Run: `ls /dev/tty.*`
+- You should see a device like `/dev/tty.usbmodem...`
+
+**Windows:**
+
+- Open "Device Manager" (search for it in the Start menu)
+- Look under "Ports (COM & LPT)" for your device (e.g., COM3, COM4)
+- Or run in PowerShell: `Get-PnpDevice -Class Ports`
+
+**Linux:**
+
+- Run: `ls /dev/ttyUSB*` or `ls /dev/ttyACM*`
+- You should see a device like `/dev/ttyUSB0` or `/dev/ttyACM0`
+
+## Project Overview
+
+You will build a Python application that:
+
+1. Lists and connects to a serial device
+2. Programs the device with a Machine Learning Core configuration
+3. Listens for incoming JSON messages from the device
+4. Plays MP3 audio files based on received label IDs
+
+## Getting Started
+
+1. **Download the repository locally:**
+
+   ```bash
+   git clone <repository-url>
+   cd mlc-audio-player
+   ```
+
+   Or download the ZIP file and extract it.
+
+2. The `sol/` folder contains the complete working solution. Refer to it when you get stuck!
+
+## Exercise 0: Setup and Project Skeleton
+
+**Objective:** Set up your Python environment and create the basic project structure.
+
+**Tasks:**
+
+1. Create a new Python virtual environment
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   ```
+2. Create `requirements.txt` with these dependencies:
+   ```
+   pyserial>=3.5
+   ```
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Create `serial_audio_player.py` with this skeleton:
+
+   ```python
+   #!/usr/bin/env python3
+   """Serial-driven MP3 audio player."""
+
+   import argparse
+   import json
+   import sys
+   from pathlib import Path
+
+   def main() -> int:
+       print("Serial Audio Player")
+       return 0
+
+   if __name__ == "__main__":
+       sys.exit(main())
+   ```
+
+5. Test by running: `main.py`
+
+**Expected Outcome:** Application runs without errors and prints "Serial Audio Player".
 
 ---
 
-## Exercise 1: Initialize Your First Audio Player
+## Exercise 1: List and Connect to Serial Device
 
-**Objective**: Set up the basic structure of your audio player and load an audio file.
+**Objective:** Implement device detection and user selection.
 
-**Tasks**:
-1. Create a Python script called `audio_player.py`
-2. Import necessary libraries
-3. Create a class to manage audio playback
-4. Initialize the player with an audio file path
+**Tasks:**
 
-**Code Snippet** - Copy this into your `audio_player.py`:
+1. Add imports for serial communication:
+   ```python
+   import serial
+   from serial.tools import list_ports
+   ```
+2. Implement `list_serial_devices()` function to enumerate connected devices
+3. Implement `choose_serial_device()` function to prompt user to select a device
+4. In `main()`, call `choose_serial_device()` and print the selected device
 
-```python
-import pygame
-import os
+**Hints:**
 
-class AudioPlayer:
-    def __init__(self, audio_file):
-        """Initialize the audio player with an audio file."""
-        pygame.mixer.init()
-        self.audio_file = audio_file
-        self.is_playing = False
-        
-        # TODO: Add your code here to load the audio file
-        # Hint: Use pygame.mixer.Sound() to load the file
-        
-    def load_audio(self):
-        """Load the audio file."""
-        # TODO: Implement audio loading logic
-        pass
-    
-    def display_info(self):
-        """Display information about the loaded audio."""
-        print(f"Loaded: {self.audio_file}")
-        # TODO: Add code to display audio properties (duration, format, etc.)
+- Use `list_ports.comports()` to get available serial ports
+- Sort ports by device name for consistent ordering
+- Display port descriptions to help users identify their device
+- Allow manual device path entry as fallback
 
-# Test your implementation
-if __name__ == "__main__":
-    # TODO: Create an instance of AudioPlayer with an audio file path
-    # player = AudioPlayer("path/to/your/audio.mp3")
-    pass
-```
+**Testing:**
 
-**Expected Outcome**: Your player should initialize without errors and be ready to load audio.
+- Connect your device and run the application
+- Verify that your device appears in the list
+- Verify you can select it
+
+**Expected Outcome:** Application lists serial devices and connects to the selected one.
 
 ---
 
-## Exercise 2: Add Basic Playback Controls
+## Exercise 2: Train and Load Device Program
 
-**Objective**: Implement play, pause, and stop functionality.
+**Objective:** Prepare the device programming configuration.
 
-**Tasks**:
-1. Add a `play()` method to start audio playback
-2. Add a `pause()` method to pause playback
-3. Add a `stop()` method to stop and reset playback
-4. Add a `get_status()` method to return current state
+**Tasks:**
 
-**Code Snippet** - Add these methods to your `AudioPlayer` class:
+1. Train an ML model on ST AIoT Craft (https://staiotcraft.st.com) with sensor configuration
+2. Download the resulting JSON configuration
+3. Save it as `device_program.json` in the project root
+4. Create `label_sounds.json` mapping from label_id to MP3 filename:
+   ```json
+   {
+     "0x0": "sound_0.mp3",
+     "0x4": "sound_4.mp3",
+     "0x8": "sound_8.mp3",
+     "0xC": "sound_c.mp3"
+   }
+   ```
+5. Create a `sounds/` folder and add MP3 files matching your mapping
+
+**File Format Expected:**
+`device_program.json` should have a structure like:
+
+```json
+{
+  "sensors": [
+    {
+      "name": "LSM6DSV16X",
+      "configuration": [
+        {"type": "write", "address": "0x10", "data": "0x00"},
+        {"type": "write", "address": "0x11", "data": "0x00"}
+      ]
+    }
+  ]
+}
+```
+
+**Expected Outcome:** `device_program.json`, `label_sounds.json`, and MP3 files are in place.
+
+---
+
+## Exercise 3: Program the Device and Parse Configuration
+
+**Objective:** Send device programming payload and load label mappings.
+
+**Tasks:**
+
+1. Add required imports at the top of your file:
+
+   ```python
+   from typing import Dict, Optional
+   ```
+
+2. Copy and paste these functions into your `serial_audio_player.py`:
+
+**`format_hex_byte()` function:**
 
 ```python
-def play(self):
-    """Start or resume audio playback."""
-    # TODO: Implement play logic
-    # Hint: Check if already playing, then use pygame.mixer.Sound.play()
-    pass
+def format_hex_byte(value: object, field_name: str) -> str:
+    try:
+        parsed = int(str(value).strip(), 16)
+    except ValueError as exc:
+        raise ValueError(f"Invalid hex value for {field_name}: {value}") from exc
 
-def pause(self):
-    """Pause the audio playback."""
-    # TODO: Implement pause logic
-    pass
+    if not 0 <= parsed <= 0xFF:
+        raise ValueError(f"Hex value for {field_name} is out of byte range: {value}")
 
-def stop(self):
-    """Stop audio playback and reset."""
-    # TODO: Implement stop logic
-    self.is_playing = False
+    return f"{parsed:02X}"
+```
 
-def get_status(self):
-    """Return the current playback status."""
-    return {
-        "playing": self.is_playing,
-        "file": self.audio_file
+**`build_program_payload()` function:**
+
+```python
+def build_program_payload(program_file: Path) -> bytes:
+    program = json.loads(program_file.read_text(encoding="utf-8"))
+
+    try:
+        configuration = program["sensors"][0]["configuration"]
+    except (KeyError, IndexError, TypeError) as exc:
+        raise ValueError(
+            "Program file must contain sensors[0].configuration."
+        ) from exc
+
+    copy_ucf_parts = []
+    for command in configuration:
+        if command.get("type") != "write":
+            continue
+
+        copy_ucf_parts.append(format_hex_byte(command.get("address"), "address"))
+        copy_ucf_parts.append(format_hex_byte(command.get("data"), "data"))
+
+    copy_ucf = "".join(copy_ucf_parts)
+    command_payload = {
+        "lsm6dsv16x_mlc*load_model": {
+            "arguments": {
+                "filename": program_file.name,
+                "size": len(copy_ucf),
+                "model": copy_ucf,
+            }
+        }
     }
 
-# Add to your test section:
+    return json.dumps(command_payload, separators=(",", ":")).encode("utf-8")
+```
+
+**`send_program_payload()` function:**
+
+```python
+def send_program_payload(
+    serial_conn: serial.Serial,
+    program_file: Path,
+    append_newline: bool,
+) -> None:
+    if not program_file.exists():
+        raise FileNotFoundError(f"Program file not found: {program_file}")
+
+    payload = build_program_payload(program_file)
+    serial_conn.write(payload)
+    if append_newline and not payload.endswith(b"\n"):
+        serial_conn.write(b"\n")
+    serial_conn.flush()
+    print(f"Programmed device with '{program_file}' ({len(payload)} bytes sent).")
+```
+
+**`load_mapping()` function:**
+
+```python
+def load_mapping(mapping_file: Path) -> Dict[int, str]:
+    if not mapping_file.exists():
+        print(
+            f"Mapping file '{mapping_file}' not found. Using default naming: <label_id>.mp3"
+        )
+        return {}
+
+    with mapping_file.open("r", encoding="utf-8") as handle:
+        raw_mapping = json.load(handle)
+
+    mapping: Dict[int, str] = {}
+    for key, value in raw_mapping.items():
+        try:
+            mapping[int(str(key).strip(), 0)] = str(value)
+        except (TypeError, ValueError):
+            print(f"Skipping invalid mapping key '{key}'.")
+
+    return mapping
+```
+
+**Helper function `resolve_sound_file()`:**
+
+```python
+def resolve_sound_file(label_id: int, mapping: Dict[int, str], sounds_dir: Path) -> Path:
+    if label_id in mapping:
+        return sounds_dir / mapping[label_id]
+    return sounds_dir / f"{label_id}.mp3"
+```
+
+3. Update your `main()` function to call these after connecting to the serial device (replace your current main):
+
+```python
+def main() -> int:
+    try:
+        device = choose_serial_device()
+        print(f"Connecting to {device}...")
+        with serial.Serial(device, 115200, timeout=1.0) as serial_conn:
+            print("Serial connection established.")
+            send_program_payload(serial_conn, Path("device_program.json"), append_newline=True)
+            mapping = load_mapping(Path("label_sounds.json"))
+            print("Label mappings loaded.")
+    except KeyboardInterrupt:
+        print("\nStopped by user.")
+    except Exception as exc:
+        print(f"Error: {exc}")
+        return 1
+
+    return 0
+
+
 if __name__ == "__main__":
-    # TODO: Test play, pause, and stop methods
-    pass
+    sys.exit(main())
 ```
 
-**Expected Outcome**: You should be able to play, pause, and stop audio from your terminal.
+**Testing:**
+
+- Run the application and verify the device is programmed
+- Check that the mapping is loaded without errors
+
+**Expected Outcome:** Device receives the programming payload; label mappings are loaded.
 
 ---
 
-## Exercise 3: Add Volume Control
+## Exercise 4: Receive Messages and Play Audio
 
-**Objective**: Implement volume adjustment functionality.
+**Objective:** Listen for device messages and trigger audio playback.
 
-**Tasks**:
-1. Add a `set_volume(level)` method (0.0 to 1.0)
-2. Add a `get_volume()` method to check current volume
-3. Add `increase_volume()` and `decrease_volume()` convenience methods
-4. Validate volume levels
-
-**Code Snippet** - Add these methods to your `AudioPlayer` class:
+**Tasks:**
+Add these imports at the top of your file:
 
 ```python
-def set_volume(self, level):
-    """Set volume level (0.0 to 1.0)."""
-    # TODO: Add validation for level (0.0-1.0)
-    # TODO: Apply volume using pygame.mixer
-    pass
-
-def get_volume(self):
-    """Get current volume level."""
-    # TODO: Return current volume
-    pass
-
-def increase_volume(self, amount=0.1):
-    """Increase volume by the specified amount."""
-    # TODO: Get current volume, add amount, set it (with bounds checking)
-    pass
-
-def decrease_volume(self, amount=0.1):
-    """Decrease volume by the specified amount."""
-    # TODO: Get current volume, subtract amount, set it (with bounds checking)
-    pass
+import shutil
+import subprocess
+from typing import Dict, Optional
 ```
 
-**Expected Outcome**: Volume changes should be reflected in audio playback.
+Copy and paste these functions into your `serial_audio_player.py`:
 
----
-
-## Exercise 4: Implement Playlist Management
-
-**Objective**: Create a playlist system to manage multiple audio files.
-
-**Tasks**:
-1. Add a `add_to_playlist(file)` method
-2. Add a `next_track()` method to play next in playlist
-3. Add a `previous_track()` method to play previous track
-4. Display current track and playlist position
-
-**Code Snippet** - Extend your `AudioPlayer` class:
+**`parse_label_id_value()` function:**
 
 ```python
-class AudioPlayer:
-    def __init__(self, audio_file=None):
-        pygame.mixer.init()
-        self.playlist = []
-        self.current_index = 0
-        self.is_playing = False
-        
-        if audio_file:
-            self.add_to_playlist(audio_file)
-    
-    def add_to_playlist(self, file):
-        """Add a file to the playlist."""
-        # TODO: Validate file exists
-        # TODO: Add to playlist
-        pass
-    
-    def next_track(self):
-        """Play the next track in the playlist."""
-        # TODO: Increment current_index
-        # TODO: Check bounds
-        # TODO: Load and play new track
-        pass
-    
-    def previous_track(self):
-        """Play the previous track in the playlist."""
-        # TODO: Decrement current_index
-        # TODO: Check bounds
-        # TODO: Load and play previous track
-        pass
-    
-    def get_playlist_info(self):
-        """Get information about current playlist."""
-        return {
-            "total_tracks": len(self.playlist),
-            "current_index": self.current_index,
-            "current_track": self.playlist[self.current_index] if self.playlist else None
-        }
+def parse_label_id_value(value: object) -> Optional[int]:
+    if isinstance(value, int):
+        return value
+
+    if isinstance(value, str):
+        try:
+            # Supports values like "8", "0x8", "0xC", etc.
+            return int(value.strip(), 0)
+        except ValueError:
+            return None
+
+    return None
 ```
 
-**Expected Outcome**: You should be able to maintain and navigate through a playlist.
-
----
-
-## Exercise 5: Add Playback Position Control
-
-**Objective**: Implement seeking and progress tracking.
-
-**Tasks**:
-1. Add a `get_position()` method to get current playback position
-2. Add a `seek(position)` method to jump to a specific time
-3. Add a `get_duration()` method to get total audio duration
-4. Display progress information
-
-**Code Snippet** - Add these methods to your `AudioPlayer` class:
+**`extract_label_id()` function:**
 
 ```python
-def get_position(self):
-    """Get current playback position in seconds."""
-    # TODO: Return current position from mixer
-    pass
+def extract_label_id(raw_message: str) -> Optional[int]:
+    try:
+        data = json.loads(raw_message)
+    except json.JSONDecodeError:
+        return None
 
-def get_duration(self):
-    """Get total audio duration in seconds."""
-    # TODO: Return duration of loaded audio
-    pass
+    if not isinstance(data, dict):
+        return None
 
-def seek(self, position):
-    """Seek to a specific position in seconds."""
-    # TODO: Validate position is within duration
-    # TODO: Seek to position (may need to stop and replay from position)
-    pass
+    # Support both payload shapes:
+    # 1) {"label_id": 3}
+    # 2) {"lsm6dsv16x_mlc": {"label_id": 3}}
+    label_id = data.get("label_id")
+    if label_id is None:
+        nested = data.get("lsm6dsv16x_mlc")
+        if isinstance(nested, dict):
+            label_id = nested.get("label_id")
 
-def get_progress_percentage(self):
-    """Get playback progress as a percentage."""
-    # TODO: Calculate (position / duration) * 100
-    pass
-
-def display_progress(self):
-    """Display formatted progress information."""
-    # TODO: Show current position and total duration
-    # Format: "2:34 / 5:12" or similar
-    pass
+    return parse_label_id_value(label_id)
 ```
 
-**Expected Outcome**: You can seek to specific positions and track playback progress.
-
----
-
-## Exercise 6: Add Event Handling (Bonus)
-
-**Objective**: Implement event callbacks for better control.
-
-**Tasks**:
-1. Add callback methods for play, pause, stop events
-2. Add callback for track completion
-3. Implement a simple event system
-
-**Code Snippet** - Add event handling to your `AudioPlayer` class:
+**Global variable for audio process management:**
 
 ```python
-class AudioPlayer:
-    def __init__(self):
-        # ... existing code ...
-        self.callbacks = {
-            "on_play": [],
-            "on_pause": [],
-            "on_stop": [],
-            "on_track_end": []
-        }
-    
-    def register_callback(self, event, callback):
-        """Register a callback for an event."""
-        # TODO: Validate event type
-        # TODO: Add callback to the list
-        pass
-    
-    def trigger_event(self, event, data=None):
-        """Trigger all callbacks for an event."""
-        # TODO: Iterate through callbacks for the event
-        # TODO: Call each callback with data
-        pass
-    
-    def play(self):
-        """Start playback and trigger on_play event."""
-        # TODO: Existing play logic
-        # TODO: Call self.trigger_event("on_play", {...})
-        pass
+_current_audio_process: Optional[subprocess.Popen[bytes]] = None
 ```
 
-**Expected Outcome**: Events trigger callbacks when player state changes.
+**`play_mp3()` function:**
+
+```python
+def play_mp3(path: Path) -> None:
+    global _current_audio_process
+
+    if not path.exists():
+        print(f"MP3 file not found: {path}")
+        return
+
+    afplay_path = shutil.which("afplay")
+    if afplay_path is None:
+        raise RuntimeError("'afplay' was not found. This macOS build requires afplay for MP3 playback.")
+
+    if _current_audio_process is not None and _current_audio_process.poll() is None:
+        _current_audio_process.terminate()
+        _current_audio_process.wait(timeout=1)
+
+    _current_audio_process = subprocess.Popen(
+        [afplay_path, str(path)],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    print(f"Playing: {path.name}")
+```
+
+**`stop_audio_playback()` function:**
+
+```python
+def stop_audio_playback() -> None:
+    global _current_audio_process
+
+    if _current_audio_process is None:
+        return
+
+    if _current_audio_process.poll() is None:
+        _current_audio_process.terminate()
+        _current_audio_process.wait(timeout=1)
+
+    _current_audio_process = None
+```
+
+**`listen_and_play()` function:**
+
+```python
+def listen_and_play(
+    serial_conn: serial.Serial,
+    mapping: Dict[int, str],
+    sounds_dir: Path,
+) -> None:
+    print("Listening for messages. Press Ctrl+C to stop.")
+
+    while True:
+        raw = serial_conn.readline()
+        if not raw:
+            continue
+
+        message = raw.decode("utf-8", errors="ignore").strip()
+        if not message:
+            continue
+
+        print(f"Received: {message}")
+        label_id = extract_label_id(message)
+
+        if label_id is None:
+            print("Ignored message: invalid JSON or missing integer label_id.")
+            continue
+
+        sound_file = resolve_sound_file(label_id, mapping, sounds_dir)
+        play_mp3(sound_file)
+```
+
+3. Update your `main()` function to include the listening loop:
+
+```python
+def main() -> int:
+    try:
+        device = choose_serial_device()
+        print(f"Connecting to {device} at 115200 baud...")
+        with serial.Serial(device, 115200, timeout=1.0) as serial_conn:
+            print("Serial connection established.")
+            send_program_payload(serial_conn, Path("device_program.json"), append_newline=True)
+            mapping = load_mapping(Path("label_sounds.json"))
+            listen_and_play(serial_conn, mapping, Path("sounds"))
+    except KeyboardInterrupt:
+        print("\nStopped by user.")
+    except Exception as exc:
+        print(f"Error: {exc}")
+        return 1
+    finally:
+        stop_audio_playback()
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+```
+
+**Testing:**
+
+- Run in test mode first: `main.py --test` (after implementing Exercise 5)
+- Connect your device and trigger messages to hear audio response
+
+**Expected Outcome:** Application plays audio when receiving serial messages with label IDs.
 
 ---
 
-## How to Work Through These Exercises
+## Exercise 5: Add Test Mode and Final Testing
 
-1. **Create your script** with the provided skeleton code
-2. **Read each TODO comment** carefully
-3. **Implement the logic** based on the hints provided
-4. **Test your implementation** with sample audio files
-5. **Move to the next exercise** once current one works
-
-## Resources
-
-- [Pygame Documentation](https://www.pygame.org/docs/)
-- [Python Audio Processing](https://realpython.com/python-audio-processing/)
-- [PySerial Documentation](https://pyserial.readthedocs.io/) - if you need serial communication
-
-## Tips
-
-- Start with MP3 or WAV files for testing
-- Use small audio files to test quickly
-- Print debug information to understand what's happening
-- Test each method individually before combining them
-
-Good luck! 🎵
+Run `main.py` and verify correct audio plays for each
