@@ -131,7 +131,7 @@ You will build a Python application that:
    ```bash
    pip install -r requirements.txt
    ```
-4. Create `serial_audio_player.py` with this skeleton:
+4. Create `main.py` with this skeleton:
 
    ```python
    #!/usr/bin/env python3
@@ -241,7 +241,7 @@ You will build a Python application that:
    from typing import Dict, Optional
    ```
 
-2. Copy and paste these functions into your `serial_audio_player.py`:
+2. Copy and paste these functions into your `main.py`:
 
 **`format_hex_byte()` function:**
 
@@ -391,7 +391,7 @@ import subprocess
 from typing import Dict, Optional
 ```
 
-Copy and paste these functions into your `serial_audio_player.py`:
+Copy and paste these functions into your `main.py`:
 
 **`parse_label_id_value()` function:**
 
