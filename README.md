@@ -2,6 +2,10 @@
 
 This repository contains a set of exercises that guide you in developing a smart drum sequencer powered by ST AIoT Craft and Machine Learning Core.
 
+<details>
+
+<summary>Pre-requisites</summary>
+
 ## Pre-requisites
 
 ### Python 3.8+
@@ -65,30 +69,13 @@ This repository contains a set of exercises that guide you in developing a smart
 - Install if not present: `sudo apt install alsa-utils` (Ubuntu/Debian)
 - Verify installation: `which aplay`
 
-### Serial device connection
+</details>
 
-**Hardware required:**
+---
 
-- A green board or ST AIoT Craft-compatible device
-- USB cable connecting your device to your computer
+<details>
 
-**Verification:**
-
-**macOS:**
-
-- Run: `ls /dev/tty.*`
-- You should see a device like `/dev/tty.usbmodem...`
-
-**Windows:**
-
-- Open "Device Manager" (search for it in the Start menu)
-- Look under "Ports (COM & LPT)" for your device (e.g., COM3, COM4)
-- Or run in PowerShell: `Get-PnpDevice -Class Ports`
-
-**Linux:**
-
-- Run: `ls /dev/ttyUSB*` or `ls /dev/ttyACM*`
-- You should see a device like `/dev/ttyUSB0` or `/dev/ttyACM0`
+<summary>Project Overview</summary>
 
 ## Project Overview
 
@@ -98,6 +85,14 @@ You will build a Python application that:
 2. Programs the device with a Machine Learning Core configuration
 3. Listens for incoming JSON messages from the device
 4. Plays MP3 audio files based on received label IDs
+
+</details>
+
+---
+
+<details>
+
+<summary>Getting Started</summary>
 
 ## Getting Started
 
@@ -111,6 +106,14 @@ You will build a Python application that:
    Or download the ZIP file and extract it.
 
 2. The `sol/` folder contains the complete working solution. Refer to it when you get stuck!
+
+</details>
+
+---
+
+<details>
+
+<summary>Exercise 0</summary>
 
 ## Exercise 0: Setup and Project Skeleton
 
@@ -128,33 +131,22 @@ You will build a Python application that:
    pyserial>=3.5
    ```
 3. Install dependencies:
+
    ```bash
    pip install -r requirements.txt
    ```
-4. Create `main.py` with this skeleton:
 
-   ```python
-   #!/usr/bin/env python3
-   """Serial-driven MP3 audio player."""
-
-   import argparse
-   import json
-   import sys
-   from pathlib import Path
-
-   def main() -> int:
-       print("Serial Audio Player")
-       return 0
-
-   if __name__ == "__main__":
-       sys.exit(main())
-   ```
-
-5. Test by running: `main.py`
+4. Test by running: `main.py`
 
 **Expected Outcome:** Application runs without errors and prints "Serial Audio Player".
 
+</details>
+
 ---
+
+<details>
+
+<summary>Exercise 1</summary>
 
 ## Exercise 1: List and Connect to Serial Device
 
@@ -168,15 +160,53 @@ You will build a Python application that:
    from serial.tools import list_ports
    ```
 2. Implement `list_serial_devices()` function to enumerate connected devices
+
+   ```python
+    def list_serial_devices() -> list:
+        ports = sorted(list_ports.comports(), key=lambda p: p.device)
+        if not ports:
+            print("No serial devices found.")
+            return []
+
+        print("Available serial devices:")
+        for idx, port in enumerate(ports, start=1):
+            description = port.description or "No description"
+            print(f"  {idx}. {port.device} - {description}")
+        return ports
+   ```
+
 3. Implement `choose_serial_device()` function to prompt user to select a device
+
+   ```python
+   def choose_serial_device() -> str:
+    ports = list_serial_devices()
+
+    if not ports:
+        device = input("Enter serial device path manually (e.g. /dev/tty.usbmodemXXX): ").strip()
+        if not device:
+            raise RuntimeError("No serial device selected.")
+        return device
+
+    while True:
+        choice = input(
+            "Select device by number or type full device path: "
+        ).strip()
+
+        if not choice:
+            print("Please provide a selection.")
+            continue
+
+        if choice.isdigit():
+            index = int(choice) - 1
+            if 0 <= index < len(ports):
+                return ports[index].device
+            print("Invalid number, try again.")
+            continue
+
+        return choice
+   ```
+
 4. In `main()`, call `choose_serial_device()` and print the selected device
-
-**Hints:**
-
-- Use `list_ports.comports()` to get available serial ports
-- Sort ports by device name for consistent ordering
-- Display port descriptions to help users identify their device
-- Allow manual device path entry as fallback
 
 **Testing:**
 
@@ -186,7 +216,13 @@ You will build a Python application that:
 
 **Expected Outcome:** Application lists serial devices and connects to the selected one.
 
+</details>
+
 ---
+
+<details>
+
+<summary>Exercise 2</summary>
 
 ## Exercise 2: Train and Load Device Program
 
@@ -197,37 +233,52 @@ You will build a Python application that:
 1. Train an ML model on ST AIoT Craft (https://staiotcraft.st.com) with sensor configuration
 2. Download the resulting JSON configuration
 3. Save it as `device_program.json` in the project root
-4. Create `label_sounds.json` mapping from label_id to MP3 filename:
-   ```json
-   {
-     "0x0": "sound_0.mp3",
-     "0x4": "sound_4.mp3",
-     "0x8": "sound_8.mp3",
-     "0xC": "sound_c.mp3"
-   }
-   ```
-5. Create a `sounds/` folder and add MP3 files matching your mapping
+4. Check matching MP3 file names to label IDs
 
 **File Format Expected:**
 `device_program.json` should have a structure like:
 
 ```json
 {
-  "sensors": [
-    {
-      "name": "LSM6DSV16X",
-      "configuration": [
-        {"type": "write", "address": "0x10", "data": "0x00"},
-        {"type": "write", "address": "0x11", "data": "0x00"}
-      ]
-    }
-  ]
+    ...
+    "outputs": [
+        {
+            "name": "Categorical output",
+            "core": "MLC",
+            "type": "uint8_t",
+            "len": "1",
+            "reg_addr": "0x70",
+            "reg_name": "MLC1_SRC",
+            "results": [
+                {
+                    "code": "0x00",
+                    "label": "0"
+                },
+                {
+                    "code": "0x04",
+                    "label": "4"
+                },
+                {
+                    "code": "0x08",
+                    "label": "8"
+                },
+                {
+                    "code": "0x0C",
+                    "label": "none"
+                }
+            ]
+        }
+    ],
 }
 ```
 
-**Expected Outcome:** `device_program.json`, `label_sounds.json`, and MP3 files are in place.
+</details>
 
 ---
+
+<details>
+
+<summary>Exercise 3</summary>
 
 ## Exercise 3: Program the Device and Parse Configuration
 
@@ -344,31 +395,6 @@ def resolve_sound_file(label_id: int, mapping: Dict[int, str], sounds_dir: Path)
     return sounds_dir / f"{label_id}.mp3"
 ```
 
-3. Update your `main()` function to call these after connecting to the serial device (replace your current main):
-
-```python
-def main() -> int:
-    try:
-        device = choose_serial_device()
-        print(f"Connecting to {device}...")
-        with serial.Serial(device, 115200, timeout=1.0) as serial_conn:
-            print("Serial connection established.")
-            send_program_payload(serial_conn, Path("device_program.json"), append_newline=True)
-            mapping = load_mapping(Path("label_sounds.json"))
-            print("Label mappings loaded.")
-    except KeyboardInterrupt:
-        print("\nStopped by user.")
-    except Exception as exc:
-        print(f"Error: {exc}")
-        return 1
-
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
-```
-
 **Testing:**
 
 - Run the application and verify the device is programmed
@@ -376,7 +402,13 @@ if __name__ == "__main__":
 
 **Expected Outcome:** Device receives the programming payload; label mappings are loaded.
 
+</details>
+
 ---
+
+<details>
+
+<summary>Exercise 4</summary>
 
 ## Exercise 4: Receive Messages and Play Audio
 
@@ -539,15 +571,8 @@ if __name__ == "__main__":
     sys.exit(main())
 ```
 
-**Testing:**
-
-- Run in test mode first: `main.py --test` (after implementing Exercise 5)
-- Connect your device and trigger messages to hear audio response
+**Testing:** Connect your device and trigger messages to hear audio response
 
 **Expected Outcome:** Application plays audio when receiving serial messages with label IDs.
 
----
-
-## Exercise 5: Add Test Mode and Final Testing
-
-Run `main.py` and verify correct audio plays for each
+</details>
