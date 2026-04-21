@@ -8,6 +8,10 @@ This repository contains a set of exercises that guide you in developing a smart
 
 ## Pre-requisites
 
+### WSL (for Windows only)
+
+For Windows OS, install WSL: https://learn.microsoft.com/en-us/windows/wsl/install .
+
 ### Python 3.8+
 
 **macOS:**
@@ -16,11 +20,11 @@ This repository contains a set of exercises that guide you in developing a smart
 - Or download from [python.org](https://www.python.org/downloads/)
 - Verify installation: `python3 --version`
 
-**Windows:**
+**Windows --> WSL (Ubuntu/Debian):**
 
-- Download the installer from [python.org](https://www.python.org/downloads/)
-- Run the installer and **check "Add Python to PATH"** during installation
-- Verify installation: Open Command Prompt and run `python --version`
+- Open WSL terminal
+- Install via package manager: `sudo apt update && sudo apt install python3.8` (or higher version like 3.9, 3.10, 3.11, 3.12)
+- Verify installation: `python3 --version`
 
 **Linux (Ubuntu/Debian):**
 
@@ -35,11 +39,11 @@ This repository contains a set of exercises that guide you in developing a smart
 - Verify installation: `pip3 --version`
 - If not installed, run: `python3 -m ensurepip --upgrade`
 
-**Windows:**
+**Windows --> WSL:**
 
-- Usually comes bundled with Python (if you checked "Add Python to PATH")
-- Verify installation: Open Command Prompt and run `pip --version`
-- If not installed, run: `python -m ensurepip --upgrade`
+- Usually comes bundled with Python
+- Verify installation: open WSL terminal and execute `pip3 --version`
+- If not installed, run: `python3 -m ensurepip --upgrade`
 
 ### Text editor or IDE
 
@@ -49,25 +53,35 @@ This repository contains a set of exercises that guide you in developing a smart
 - Install Python extension from the Extensions marketplace
 - Verify installation: Open the application
 
-**Alternatives:** PyCharm, Sublime Text, or any text editor
+**For Windows only**: once installed VSCode on Windows, open VSCode and, from extension marketplace side panel, install **WSL** extension (by Microsoft - "ms-vscode-remote.remote-wsl")
 
-### Operating System Specific Requirements
+</details>
 
-**macOS:**
+---
 
-- This application uses the native `afplay` command for audio playback
-- Verify `afplay` is available: `which afplay` (should output `/usr/bin/afplay`)
+<details>
 
-**Windows:**
+<summary>USB Device Sharing in WSL</summary>
 
-- This application uses native Windows media player (via `winsound` or similar)
-- No additional installation needed; built-in to Windows
+To access the ST AIoT Craft device in WSL for serial communication:
 
-**Linux:**
+1. Install `usbipd-win` on Windows:
+   ```
+   winget install usbipd-win
+   ```
 
-- This application uses `aplay` (ALSA player) for audio playback
-- Install if not present: `sudo apt install alsa-utils` (Ubuntu/Debian)
-- Verify installation: `which aplay`
+2. In PowerShell (run as Administrator):
+   - List USB devices: `usbipd list`
+   - Bind your device (replace `X-Y` with the BUSID of your ST board): `usbipd bind --busid X-Y`
+   - Attach to WSL: `usbipd attach --wsl --busid X-Y`
+
+3. In WSL terminal:
+   - Check for the device: `ls /dev/tty*` (look for `/dev/ttyACM0` or similar)
+   - Run the Python script in WSL, selecting the `/dev/ttyACM0` device path
+
+4. When done, detach in PowerShell: `usbipd detach --busid X-Y`
+
+This allows WSL to access the USB serial device directly, bypassing Windows COM port issues.
 
 </details>
 
@@ -98,14 +112,17 @@ You will build a Python application that:
 
 1. **Download the repository locally:**
 
-   ```bash
-   git clone <repository-url>
-   cd mlc-audio-player
-   ```
+```bash
+# Download the ZIP file
+wget https://github.com/davide-sergi/mlc-audio-player/archive/refs/heads/main.zip
 
-   Or download the ZIP file and extract it.
+# Extract the ZIP file
+sudo apt install unzip
+unzip main.zip
 
-2. The `sol/` folder contains the complete working solution. Refer to it when you get stuck!
+# Navigate into the extracted directory
+cd mlc-audio-player-main
+```
 
 </details>
 
