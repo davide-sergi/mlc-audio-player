@@ -94,6 +94,25 @@ This allows WSL to access the USB serial device directly, bypassing Windows COM 
 
 ## Project Overview
 
+```mermaid
+graph LR
+    subgraph "Host PC"
+        APP["Python App<br/><i>serial_audio_player.py</i>"]
+    end
+
+    subgraph "ST AIoT Craft Device"
+        PnPL["PnPL Interface"]
+        MLC["MLC Sensor<br/><i>LSM6DSV16X</i>"]
+        PnPL --- MLC
+    end
+
+    APP -- "PnPL command<br/><b>load_model</b><br/>(UCF program via JSON)" --> PnPL
+    MLC -- "Inference result<br/><b>{label_id: N}</b><br/>(JSON over serial)" --> APP
+
+    APP ~~~ SERIAL["USB Serial Port<br/><i>115200 baud</i>"]
+    SERIAL ~~~ PnPL
+```
+
 You will build a Python application that:
 
 1. Lists and connects to a serial device
