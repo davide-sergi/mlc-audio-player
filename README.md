@@ -66,6 +66,7 @@ For Windows OS, install WSL: https://learn.microsoft.com/en-us/windows/wsl/insta
 To access the ST AIoT Craft device in WSL for serial communication:
 
 1. Install `usbipd-win` on Windows:
+
    ```
    winget install usbipd-win
    ```
@@ -380,35 +381,10 @@ def send_program_payload(
     print(f"Programmed device with '{program_file}' ({len(payload)} bytes sent).")
 ```
 
-**`load_mapping()` function:**
-
-```python
-def load_mapping(mapping_file: Path) -> Dict[int, str]:
-    if not mapping_file.exists():
-        print(
-            f"Mapping file '{mapping_file}' not found. Using default naming: <label_id>.mp3"
-        )
-        return {}
-
-    with mapping_file.open("r", encoding="utf-8") as handle:
-        raw_mapping = json.load(handle)
-
-    mapping: Dict[int, str] = {}
-    for key, value in raw_mapping.items():
-        try:
-            mapping[int(str(key).strip(), 0)] = str(value)
-        except (TypeError, ValueError):
-            print(f"Skipping invalid mapping key '{key}'.")
-
-    return mapping
-```
-
 **Helper function `resolve_sound_file()`:**
 
 ```python
-def resolve_sound_file(label_id: int, mapping: Dict[int, str], sounds_dir: Path) -> Path:
-    if label_id in mapping:
-        return sounds_dir / mapping[label_id]
+def resolve_sound_file(label_id: int, sounds_dir: Path) -> Path:
     return sounds_dir / f"{label_id}.mp3"
 ```
 
@@ -557,7 +533,7 @@ def listen_and_play(
             print("Ignored message: invalid JSON or missing integer label_id.")
             continue
 
-        sound_file = resolve_sound_file(label_id, mapping, sounds_dir)
+        sound_file = resolve_sound_file(label_id, sounds_dir)
         play_mp3(sound_file)
 ```
 
@@ -571,8 +547,7 @@ def main() -> int:
         with serial.Serial(device, 115200, timeout=1.0) as serial_conn:
             print("Serial connection established.")
             send_program_payload(serial_conn, Path("device_program.json"), append_newline=True)
-            mapping = load_mapping(Path("label_sounds.json"))
-            listen_and_play(serial_conn, mapping, Path("sounds"))
+            listen_and_play(serial_conn, Path("sounds"))
     except KeyboardInterrupt:
         print("\nStopped by user.")
     except Exception as exc:

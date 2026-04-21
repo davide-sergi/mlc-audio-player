@@ -90,8 +90,7 @@ def main() -> int:
                 args.program_file,
                 append_newline=not args.no_program_newline,
             )
-            mapping = load_mapping(args.mapping_file)
-            listen_and_play(serial_conn, mapping, args.sounds_dir)
+            listen_and_play(serial_conn, args.sounds_dir)
     except KeyboardInterrupt:
         print("\nStopped by user.")
     except Exception as exc:  # pragma: no cover - CLI error boundary
