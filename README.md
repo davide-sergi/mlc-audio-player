@@ -390,11 +390,12 @@ def compress_mlc_model_json_file(input_filepath, target_component, with_new_line
 ```python
 def build_program_payload(program_file: Path) -> bytes:
    copy_ucf = compress_mlc_model_json_file(program_file, target_component="LSM6DSV16X", with_new_lines=True)
+   compressed_model_content_size = len(copy_ucf.encode("unicode_escape"))
    command_payload = {
      "lsm6dsv16x_mlc*load_model": {
          "arguments": {
              "filename": "model_name",
-             "size": len(copy_ucf),
+             "size": compressed_model_content_size,
              "content": copy_ucf,
          }
      }
@@ -418,8 +419,8 @@ def send_program_payload(
 
     payload = build_program_payload(program_file)
     serial_conn.write(payload)
-    if append_newline and not payload.endswith(b"\n"):
-        serial_conn.write(b"\n")
+    if append_newline and not payload.endswith(b"\r\n"):
+        serial_conn.write(b"\r\n")
     serial_conn.flush()
     print(f"Programmed device with '{program_file}' ({len(payload)} bytes sent).")
 ```
