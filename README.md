@@ -100,13 +100,15 @@ graph LR
         APP["Python App<br/><i>serial_audio_player.py</i>"]
     end
 
-    subgraph "ST AIoT Craft Device"
+    subgraph "SensorTile.Box PRO"
         PnPL["PnPL Interface"]
+        MCU["MCU<br/><i>AI Inertial FW</i>"]
         MLC["MLC Sensor<br/><i>LSM6DSV16X</i>"]
-        PnPL --- MLC
+        PnPL --- MCU
+        MCU --- MLC
     end
 
-    APP -- "PnPL command<br/><b>load_model</b><br/>(UCF program via JSON)" --> PnPL
+    APP -- "PnPL command<br/><b>load_model</b><br/>(MLC configuration)" --> PnPL
     MLC -- "Inference result<br/><b>{label_id: N}</b><br/>(JSON over serial)" --> APP
 
     APP ~~~ SERIAL["USB Serial Port<br/><i>115200 baud</i>"]
