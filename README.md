@@ -531,7 +531,6 @@ def stop_audio_playback() -> None:
 ```python
 def listen_and_play(
     serial_conn: serial.Serial,
-    mapping: Dict[int, str],
     sounds_dir: Path,
 ) -> None:
     print("Listening for messages. Press Ctrl+C to stop.")
