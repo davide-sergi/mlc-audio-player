@@ -327,6 +327,8 @@ cd mlc-audio-player-main
 
    ```python
    from typing import Dict, Optional
+   import json
+   from collections import OrderedDict
    ```
 
 2. Copy and paste these functions into your `main.py`:
@@ -334,51 +336,71 @@ cd mlc-audio-player-main
 **`format_hex_byte()` function:**
 
 ```python
-def format_hex_byte(value: object, field_name: str) -> str:
-    try:
-        parsed = int(str(value).strip(), 16)
-    except ValueError as exc:
-        raise ValueError(f"Invalid hex value for {field_name}: {value}") from exc
-
-    if not 0 <= parsed <= 0xFF:
-        raise ValueError(f"Hex value for {field_name} is out of byte range: {value}")
-
-    return f"{parsed:02X}"
+def compress_mlc_model_json_file(input_filepath, target_component, with_new_lines = False):
+   try:
+     # Reading input file.
+     with open(input_filepath, 'r') as file:
+         data = json.load(file)
+   
+     # Looking for sensor.
+     for sensor in data.get('sensors', []):
+         if target_component.upper() in sensor["name"]:
+   
+             # Looking for MLC register name.
+             source_register = None
+             for output in sensor["outputs"]:
+                 if output["core"] == "MLC":
+                     source_register = f"<{output['reg_name']}>"
+                     break
+   
+             # Raising an error in case the source register has not been found.
+             if not source_register:
+                 raise Exception("Source register not found in '{}' file for sensor '{}'.".format(input_filepath, target_component))
+   
+             # Compressing file.
+             compressed_data = []
+             for config in sensor.get('configuration', []):
+                 # Looking for a 'write' instruction: it extracts the register address and the data.
+                 if config.get('type') == 'write':
+                     address = config['address'].replace('0x', '')
+                     data = config['data'].replace('0x', '')
+                     compressed_data.append(address + data)
+                 # Looking for a 'wait' instruction: if the row starts with the 'WAIT' prefix, it extracts the time to wait.
+                 elif config.get('type') == 'delay':
+                     delay_time = int(config['data'])
+                     compressed_data.append(f"W{delay_time:03d}")
+   
+             # Returning payload.
+             if with_new_lines:
+                 return '{}\n'.format(source_register) + '\n'.join(compressed_data)
+             else:
+                 return ''.join(compressed_data)
+     
+     # Returning None in case the sensor has not been found.
+     return None
+   
+   except Exception as e:
+     raise e
 ```
 
 **`build_program_payload()` function:**
 
 ```python
 def build_program_payload(program_file: Path) -> bytes:
-    program = json.loads(program_file.read_text(encoding="utf-8"))
-
-    try:
-        configuration = program["sensors"][0]["configuration"]
-    except (KeyError, IndexError, TypeError) as exc:
-        raise ValueError(
-            "Program file must contain sensors[0].configuration."
-        ) from exc
-
-    copy_ucf_parts = []
-    for command in configuration:
-        if command.get("type") != "write":
-            continue
-
-        copy_ucf_parts.append(format_hex_byte(command.get("address"), "address"))
-        copy_ucf_parts.append(format_hex_byte(command.get("data"), "data"))
-
-    copy_ucf = "".join(copy_ucf_parts)
-    command_payload = {
-        "lsm6dsv16x_mlc*load_model": {
-            "arguments": {
-                "filename": program_file.name,
-                "size": len(copy_ucf),
-                "model": copy_ucf,
-            }
-        }
-    }
-
-    return json.dumps(command_payload, separators=(",", ":")).encode("utf-8")
+   copy_ucf = compress_mlc_model_json_file(program_file, target_component="LSM6DSV16X", with_new_lines=False)
+   command_payload = {
+     "lsm6dsv16x_mlc*load_model": {
+         "arguments": {
+             "filename": "model_name",
+             "size": len(copy_ucf),
+             "content": copy_ucf,
+         }
+     }
+   }
+   # Print JSON command
+   print("Generated command payload:")
+   print(json.dumps(command_payload, indent=2))
+   return json.dumps(command_payload, separators=(",", ":")).encode("utf-8")
 ```
 
 **`send_program_payload()` function:**
