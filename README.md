@@ -389,7 +389,7 @@ def compress_mlc_model_json_file(input_filepath, target_component, with_new_line
 
 ```python
 def build_program_payload(program_file: Path) -> bytes:
-   copy_ucf = compress_mlc_model_json_file(program_file, target_component="LSM6DSV16X", with_new_lines=False)
+   copy_ucf = compress_mlc_model_json_file(program_file, target_component="LSM6DSV16X", with_new_lines=True)
    command_payload = {
      "lsm6dsv16x_mlc*load_model": {
          "arguments": {
