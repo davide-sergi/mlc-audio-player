@@ -265,7 +265,7 @@ cd mlc-audio-player-main
 
 ## Exercise 2: Train and Load Device Program
 
-**Objective:** Prepare the device programming configuration.
+**Objective:** generate a MLC configuration which acts as inclinometer (e.g. `none`, `forward`, `leftright`) 
 
 **Tasks:**
 
