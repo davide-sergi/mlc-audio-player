@@ -68,7 +68,7 @@ def send_program_payload(serial_conn: serial.Serial, program_file: Path, append_
 def extract_label_id(raw_message: str) -> Optional[int]:
     pass
 
-def listen_and_play(serial_conn: serial.Serial, mapping: Dict[int, str], sounds_dir: Path) -> None:
+def listen_and_play(serial_conn: serial.Serial, sounds_dir: Path) -> None:
     pass
 
 def play_sound(file_path: Path) -> None:
