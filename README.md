@@ -335,7 +335,7 @@ cd mlc-audio-player-main
 
 2. Copy and paste these functions into your `main.py`:
 
-**`format_hex_byte()` function:**
+**`compress_mlc_model_json_file()` function:**
 
 ```python
 def compress_mlc_model_json_file(input_filepath, target_component, with_new_lines = False):
